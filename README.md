@@ -22,7 +22,7 @@ Once GitHub Pages is enabled (see [Deploying](#deploying)):
 | | |
 |---|---|
 | **WebGL fluid hero** | A full-bleed GPU fluid simulation paints cyan → blue → violet → magenta ink on a near-black ground. It bursts on load, then an invisible auto-cursor orbits the centre forever; the real mouse or finger stirs it too. |
-| **The MA medallion, in 3D** | A real glTF model — `MA` raised on the front face, the portrait on the reverse. Drag it to spin, with inertia and arrow-key support; left alone it turns slowly so the photo comes round on its own. The same model renders one still frame as the header logo. |
+| **The MA medallion, in 3D** | The header brand mark is a real glTF model, not an icon — `MA` raised on the front face, the portrait on the reverse. Drag it to spin, with inertia; left alone it drifts slowly so the photo comes round on its own. It is still the back-to-top link: a click that did not travel navigates, a click that ended a drag does not. |
 | **Bilingual — EN / ID** | A switch in the header translates 131 elements across the page. The choice is remembered in `localStorage`, and the page opens in Indonesian automatically for `id-*` browsers. `<html lang>` follows the switch. |
 | **The full CV** | Profile, six capability domains, a dated experience timeline, six selected projects, education, certifications, and community work — all sourced from the PDF in `assets/`. |
 | **CV download** | The PDF is embedded in the page as a data URI, so the download works even from a single file with nothing beside it. |
@@ -36,10 +36,10 @@ Once GitHub Pages is enabled (see [Deploying](#deploying)):
 - **`prefers-reduced-motion` is respected.** The fluid simulation, the marquee, and every entrance
   animation are skipped; a static ink gradient stands in for the hero.
 - **Graceful WebGL fallback.** Same static gradient if the browser has no WebGL context. If
-  three.js cannot load, the header keeps its flow glyph and the hero keeps the flat photo — both
-  are in the markup from the start and are only swapped out once a 3D frame has actually drawn.
-- **Both the simulation and the medallion pause** when the hero scrolls out of view and when the
-  tab is hidden, so they cost nothing while you read.
+  three.js cannot load, the header keeps the flow glyph that is in the markup from the start — it
+  is only removed once a 3D frame has actually drawn.
+- **The simulation pauses** when the hero scrolls out of view; both it and the medallion stop
+  while the tab is hidden, so they cost nothing in the background.
 - **The medallion leaves vertical scrolling alone.** `touch-action: pan-y` means a swipe up the
   page still scrolls; a sideways drag turns the logo.
 - **Accessibility.** Semantic landmarks, a skip link, visible focus rings, `aria-pressed` on the
@@ -159,8 +159,9 @@ is painted explicitly rather than inherited.
 ## Ringkasan (Bahasa Indonesia)
 
 Situs profil pribadi Muhammad Aditya, dibuat sebagai **satu berkas `index.html` mandiri** — tanpa
-framework, tanpa proses build. Fitur utamanya: hero dengan simulasi fluida WebGL, **logo MA 3D yang
-bisa diputar dengan kursor** (huruf MA di sisi depan, foto di sisi belakang), **pengalih bahasa
+framework, tanpa proses build. Fitur utamanya: hero dengan simulasi fluida WebGL, **logo MA 3D di
+header yang bisa diputar dengan kursor** (huruf MA di sisi depan, foto di sisi belakang, dan tetap
+berfungsi sebagai tautan kembali ke atas), **pengalih bahasa
 EN/ID** yang menerjemahkan seluruh halaman dan mengingat pilihan pengunjung, isi CV lengkap, serta
 tombol unduh CV yang berfungsi tanpa berkas pendamping karena PDF-nya sudah tertanam di dalam
 halaman.
