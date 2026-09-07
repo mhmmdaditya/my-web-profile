@@ -22,6 +22,7 @@ Once GitHub Pages is enabled (see [Deploying](#deploying)):
 | | |
 |---|---|
 | **WebGL fluid hero** | A full-bleed GPU fluid simulation paints cyan → blue → violet → magenta ink on a near-black ground. It bursts on load, then an invisible auto-cursor orbits the centre forever; the real mouse or finger stirs it too. |
+| **The MA medallion, in 3D** | A real glTF model — `MA` raised on the front face, the portrait on the reverse. Drag it to spin, with inertia and arrow-key support; left alone it turns slowly so the photo comes round on its own. The same model renders one still frame as the header logo. |
 | **Bilingual — EN / ID** | A switch in the header translates 131 elements across the page. The choice is remembered in `localStorage`, and the page opens in Indonesian automatically for `id-*` browsers. `<html lang>` follows the switch. |
 | **The full CV** | Profile, six capability domains, a dated experience timeline, six selected projects, education, certifications, and community work — all sourced from the PDF in `assets/`. |
 | **CV download** | The PDF is embedded in the page as a data URI, so the download works even from a single file with nothing beside it. |
@@ -34,9 +35,13 @@ Once GitHub Pages is enabled (see [Deploying](#deploying)):
   copy stays readable on a long page.
 - **`prefers-reduced-motion` is respected.** The fluid simulation, the marquee, and every entrance
   animation are skipped; a static ink gradient stands in for the hero.
-- **Graceful WebGL fallback.** Same static gradient if the browser has no WebGL context.
-- **The simulation pauses** when the hero scrolls out of view and when the tab is hidden, so it
-  costs nothing while you read.
+- **Graceful WebGL fallback.** Same static gradient if the browser has no WebGL context. If
+  three.js cannot load, the header keeps its flow glyph and the hero keeps the flat photo — both
+  are in the markup from the start and are only swapped out once a 3D frame has actually drawn.
+- **Both the simulation and the medallion pause** when the hero scrolls out of view and when the
+  tab is hidden, so they cost nothing while you read.
+- **The medallion leaves vertical scrolling alone.** `touch-action: pan-y` means a swipe up the
+  page still scrolls; a sideways drag turns the logo.
 - **Accessibility.** Semantic landmarks, a skip link, visible focus rings, `aria-pressed` on the
   language switch, keyboard-dismissable mobile menu, and live-region feedback on copy.
 - **Nothing is parked invisible.** Scroll reveals are opt-in via JavaScript, with a 3-second
@@ -83,11 +88,13 @@ photo and the CV inside it.
 
 ```
 .
-├── index.html                       # the entire site (~440 KB, assets embedded)
+├── index.html                       # the entire site (~1.0 MB, assets embedded)
 ├── assets/
 │   ├── profile-photo.jpg            # source photo, embedded in index.html
-│   └── muhammad-aditya-cv.pdf       # source CV, embedded in index.html
+│   ├── muhammad-aditya-cv.pdf       # source CV, embedded in index.html
+│   └── MA-logo.glb                  # source 3D logo, embedded in index.html
 ├── .nojekyll                        # GitHub Pages: serve files as-is
+├── .gitattributes
 ├── .gitignore
 └── README.md
 ```
@@ -95,12 +102,19 @@ photo and the CV inside it.
 `assets/` holds the **originals**. The page does not fetch them at runtime — it carries its own
 base64 copies — so they are here for regeneration, not for serving.
 
+**On the file size.** Keeping everything inside one file costs about 1 MB, of which roughly 610 KB
+is the 3D logo and 290 KB the CV. That buys a page you can email, open from a USB stick, or host
+anywhere without a single supporting request. If a lighter first load matters more than that, move
+`MA-logo.glb` out and fetch it at runtime instead — the trade is real, and it is deliberate rather
+than accidental.
+
 ---
 
 ## Built with
 
 - **[Onest](https://fonts.google.com/specimen/Onest)** for text and **[JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)** for data labels, via Google Fonts.
 - **[Lenis](https://github.com/darkroomengineering/lenis) 1.3.19** for smooth scrolling, loaded from jsDelivr. If the CDN is unreachable the page falls back to native smooth scrolling.
+- **[three.js](https://threejs.org) r184** with `GLTFLoader` and `RoomEnvironment`, for the medallion. The plate, rim and letters are metal with a clearcoat, so they are lit by a generated environment map rather than lights alone; two tinted point lights carry the page's cyan and magenta across the bevels.
 - **[WebGL Fluid Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation)** by Pavel Dobryakov (MIT) — the solver behind the hero, tuned here for an oily, marbled look on near-black, with a colour band restricted to cyan through magenta and an auto-cursor that keeps it alive with no input.
 - Plain DOM and vanilla JavaScript for everything else.
 
@@ -125,8 +139,16 @@ translation attributes — keep it that way, and escape `&` as `&amp;`.
 node -e "const fs=require('fs');const b=fs.readFileSync('assets/profile-photo.jpg').toString('base64');const f='index.html';let d=fs.readFileSync(f,'utf8');d=d.replace(/src=\"data:image\/jpeg;base64,[^\"]*\"/,'src=\"data:image/jpeg;base64,'+b+'\"');fs.writeFileSync(f,d)"
 
 # CV
-node -e "const fs=require('fs');const b=fs.readFileSync('assets/muhammad-aditya-cv.pdf').toString('base64');const f='index.html';let d=fs.readFileSync(f,'utf8');d=d.replace(/var CV_B64 = '[^']*'/,'var CV_B64 = '+JSON.stringify(b));fs.writeFileSync(f,d)"
+node -e "const fs=require('fs');const b=fs.readFileSync('assets/muhammad-aditya-cv.pdf').toString('base64');const f='index.html';let d=fs.readFileSync(f,'utf8');d=d.replace(/var CV_B64 = \"[^\"]*\"/,'var CV_B64 = '+JSON.stringify(b));fs.writeFileSync(f,d)"
+
+# 3D logo
+node -e "const fs=require('fs');const b=fs.readFileSync('assets/MA-logo.glb').toString('base64');const f='index.html';let d=fs.readFileSync(f,'utf8');d=d.replace(/const LOGO_B64 = \"[^\"]*\"/,'const LOGO_B64 = '+JSON.stringify(b));fs.writeFileSync(f,d)"
 ```
+
+A replacement `.glb` should keep the same shape to drop straight in: a single root node holding the
+disc, with the readable face toward `+Z` and anything meant to be discovered on `-Z`. The page
+centres the model and frames it by its bounding box, so scale does not matter — but a model whose
+front faces elsewhere will open back-to-front.
 
 **Colours and spacing.** Every colour and the type scale are CSS custom properties in the `:root`
 block at the top of the file. The page commits to a single dark theme deliberately, so each colour
@@ -137,7 +159,8 @@ is painted explicitly rather than inherited.
 ## Ringkasan (Bahasa Indonesia)
 
 Situs profil pribadi Muhammad Aditya, dibuat sebagai **satu berkas `index.html` mandiri** — tanpa
-framework, tanpa proses build. Fitur utamanya: hero dengan simulasi fluida WebGL, **pengalih bahasa
+framework, tanpa proses build. Fitur utamanya: hero dengan simulasi fluida WebGL, **logo MA 3D yang
+bisa diputar dengan kursor** (huruf MA di sisi depan, foto di sisi belakang), **pengalih bahasa
 EN/ID** yang menerjemahkan seluruh halaman dan mengingat pilihan pengunjung, isi CV lengkap, serta
 tombol unduh CV yang berfungsi tanpa berkas pendamping karena PDF-nya sudah tertanam di dalam
 halaman.
